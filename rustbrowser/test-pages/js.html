@@ -1,0 +1,146 @@
+<!doctype html>
+<html><head><title>JS test</title>
+<style>
+  body { font-family: sans-serif; margin: 24px; }
+  h1 { margin-top: 0; }
+  .card { border: 1px solid #ccc; padding: 10px 14px; margin: 10px 0; background: #fafafa; }
+  .hot { background: #ffe1d6; border-color: #e86a3a; }
+  .done { text-decoration: line-through; color: #888; }
+  #bar { background: #3b82f6; height: 10px; width: 0; }
+  .ok { color: #15803d; } .bad { color: #b91c1c; }
+</style>
+</head><body>
+<h1 id="title">JavaScript test page</h1>
+<div class="card"><b>Results:</b> <span id="summary">running…</span><ul id="results"></ul></div>
+
+<div class="card" id="counter-card">
+  Counter: <span id="count">0</span>
+  <button id="inc">+1</button> <button id="dec">-1</button> <button id="hot">toggle class</button>
+</div>
+
+<div class="card">
+  <form id="todo-form">Todo: <input id="todo-input" name="t" placeholder="Type and press Enter"> <input type="submit" value="Add"></form>
+  <ul id="todos"></ul>
+</div>
+
+<div class="card">Clock: <span id="clock">--</span> · ticks: <span id="ticks">0</span>
+  <div style="background:#e5e7eb; margin-top:6px"><div id="bar"></div></div>
+</div>
+
+<div class="card">
+  <a href="https://example.com/should-not-navigate" id="blocked">This link is cancelled by preventDefault</a> ·
+  <a href="javascript:alert('Hello from a javascript: link')">javascript: link</a> ·
+  <a href="#" onclick="document.getElementById('inline').textContent = 'inline onclick ran'; return false">inline onclick</a>
+  <span id="inline"></span>
+</div>
+<div class="card" id="fetched">fetch: pending</div>
+
+<script>
+const results = [];
+function check(name, cond) { results.push([name, !!cond]); }
+
+const ul = document.getElementById('results');
+check('getElementById', ul && ul.tagName === 'UL');
+check('querySelectorAll', document.querySelectorAll('.card').length === 6);
+check('closest/matches', document.getElementById('count').closest('.card').id === 'counter-card');
+
+const p = document.createElement('p');
+p.textContent = 'created & appended';
+document.body.appendChild(p);
+check('createElement/appendChild', p.parentNode === document.body && document.body.lastElementChild === p);
+p.remove();
+check('remove()', p.parentNode === null);
+
+const frag = document.createDocumentFragment();
+['a', 'b', 'c'].forEach(t => { const li = document.createElement('li'); li.textContent = t; frag.appendChild(li); });
+const tmp = document.createElement('ul'); tmp.appendChild(frag);
+check('DocumentFragment', tmp.children.length === 3 && tmp.innerHTML === '<li>a</li><li>b</li><li>c</li>');
+
+tmp.innerHTML = '<li class="x">one</li><li>two &amp; three</li>';
+check('innerHTML parse', tmp.querySelector('.x').textContent === 'one' && tmp.lastChild.textContent === 'two & three');
+
+const el = document.createElement('div');
+el.classList.add('a', 'b'); el.classList.toggle('a'); el.classList.add('c');
+check('classList', el.className === 'b c' && el.classList.contains('c'));
+el.style.backgroundColor = 'red'; el.style.marginTop = '4px';
+check('style', el.getAttribute('style') === 'background-color: red; margin-top: 4px;' && el.style.marginTop === '4px');
+el.dataset.userId = '42';
+check('dataset', el.getAttribute('data-user-id') === '42' && el.dataset.userId === '42');
+
+try {
+  localStorage.setItem('k', 'v');
+  check('localStorage', localStorage.getItem('k') === 'v' && localStorage.length >= 1);
+} catch (e) {
+  check('localStorage (blocked for this origin)', e.name === 'SecurityError');
+}
+
+let bubbled = '';
+document.body.addEventListener('ping', e => { bubbled = e.target.id + ':' + e.detail; });
+document.getElementById('count').dispatchEvent(new CustomEvent('ping', { bubbles: true, detail: 7 }));
+check('CustomEvent bubbling', bubbled === 'count:7');
+
+check('JSON/Array/Map', JSON.stringify([...new Map([[1, 2]])]) === '[[1,2]]');
+check('location', /^(file|https?):$/.test(location.protocol) && location.pathname.endsWith('js.html'));
+check('URL', new URL('../x?a=1', 'https://h.example/p/q').href === 'https://h.example/x?a=1');
+check('btoa/atob', atob(btoa('hello')) === 'hello');
+
+document.title = 'JS test ✓';
+check('document.title', document.querySelector('title').textContent === 'JS test ✓');
+
+let count = 0;
+const countEl = document.getElementById('count');
+document.getElementById('inc').addEventListener('click', () => { countEl.textContent = ++count; });
+document.getElementById('dec').addEventListener('click', () => { countEl.textContent = --count; });
+document.getElementById('hot').onclick = () => document.getElementById('counter-card').classList.toggle('hot');
+
+const input = document.getElementById('todo-input');
+const todos = document.getElementById('todos');
+function addTodo(text) {
+  const li = document.createElement('li');
+  li.textContent = text + ' ';
+  const x = document.createElement('button');
+  x.textContent = 'done';
+  x.addEventListener('click', () => li.classList.toggle('done'));
+  li.appendChild(x);
+  todos.appendChild(li);
+}
+addTodo('Write a browser engine');
+document.getElementById('todo-form').addEventListener('submit', e => {
+  e.preventDefault();
+  if (input.value.trim()) addTodo(input.value.trim());
+  input.value = '';
+});
+
+document.getElementById('blocked').addEventListener('click', e => {
+  e.preventDefault();
+  e.target.textContent = 'Navigation was cancelled';
+});
+
+let ticks = 0;
+const pad = n => String(n).padStart(2, '0');
+setInterval(() => {
+  const d = new Date();
+  document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}, 250);
+const iv = setInterval(() => {
+  ticks++;
+  document.getElementById('ticks').textContent = ticks;
+  document.getElementById('bar').style.width = Math.min(100, ticks * 5) + '%';
+  if (ticks >= 20) clearInterval(iv);
+}, 100);
+
+fetch('stress.html').then(r => r.text()).then(t => {
+  document.getElementById('fetched').textContent = 'fetch: loaded stress.html, ' + t.length + ' characters, title "' + t.match(/<title>([^<]*)/)[1].replace(/\s+/g, ' ') + '"';
+}).catch(e => { document.getElementById('fetched').textContent = 'fetch failed: ' + e.message; });
+
+let loaded = false;
+window.addEventListener('load', () => { loaded = true; setTimeout(finish, 0); });
+Promise.resolve().then(() => check('microtasks', true));
+function finish() {
+  check('load event', loaded && document.readyState === 'complete');
+  const ok = results.filter(r => r[1]).length;
+  document.getElementById('summary').innerHTML = '<b class="' + (ok === results.length ? 'ok' : 'bad') + '">' + ok + ' / ' + results.length + ' passed</b>';
+  ul.innerHTML = results.map(([n, r]) => '<li class="' + (r ? 'ok' : 'bad') + '">' + (r ? 'pass' : 'FAIL') + ' — ' + n + '</li>').join('');
+}
+</script>
+</body></html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><title>Dialogs</title>
+<style>body { font-family: sans-serif; margin: 32px; } button, select { font-size: 18px; padding: 6px 14px; } p { font-size: 18px; }</style>
+</head><body>
+<h1>Dialog test</h1>
+<p><button id="ask">Ask a question</button> <span id="answer">no answer yet</span></p>
+<p><select id="fruit"><option>Apple</option><option>Banana</option><option>Cherry</option></select> <span id="picked">picked: Apple</span></p>
+<p><button onclick="alert('An alert from the page')">Show alert</button></p>
+<script>
+  document.getElementById('ask').addEventListener('click', () => {
+    document.getElementById('answer').textContent = confirm('Do you like this browser?') ? 'answered OK' : 'answered Cancel';
+  });
+  document.getElementById('fruit').addEventListener('change', e => {
+    document.getElementById('picked').textContent = 'picked: ' + e.target.value;
+  });
+</script>
+</body></html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><title>Stress   test
+page</title>
+<style>
+  body { font-family: Verdana, sans-serif; font-size: 14px }
+  #hn { background: #f6f6ef; width: 85%; margin: 0 auto }
+  #hn .bar td { background: #ff6600 }
+  .title a { color: #000; text-decoration: none }
+  .sub { color: #828282; font-size: 9pt }
+  .data { border-collapse: collapse; margin: 12px 0 }
+  .data th { background: #333; color: white; padding: 4px 8px }
+  .data td { border: 1px solid #ccc; padding: 4px 8px }
+  .data td.num { text-align: right }
+  div > p.child { color: green }
+  div p.desc { font-style: italic }
+  a[href^="https"] { color: #0a6 }
+  .imp { color: red !important }
+  p.imp { color: blue }
+  @media (max-width: 600px) { .wide-only { display: none } }
+  @media (min-width: 601px) { .narrow-only { display: none } }
+  @media print { body { background: black } }
+  .card { box-sizing: border-box; width: 300px; padding: 10px; border: 4px solid #46a; margin: 10px auto; background: #eef }
+  .up { text-transform: uppercase; letter-spacing: 1px }
+  .cap { text-transform: capitalize }
+  .wrap { white-space: pre-wrap; font-family: monospace; background: #eee }
+  .hidden { visibility: hidden }
+  .gone { display: none }
+  ol.roman { list-style-type: upper-roman }
+  ol.alpha { list-style: lower-alpha }
+</style></head>
+<body>
+<table id="hn" cellpadding="0" cellspacing="0">
+  <tr class="bar"><td><b>Hacker News</b> new | past | comments | ask | show | jobs | submit</td></tr>
+  <tr><td>
+    <table cellspacing="0" cellpadding="0">
+      <tr><td align="right" valign="top" class="title">1.</td><td class="title"><a href="https://example.com/a">A story about writing a browser engine in Rust</a> <span class="sub">(example.com)</span></td></tr>
+      <tr><td></td><td class="sub">312 points by someone 3 hours ago | 120&nbsp;comments</td></tr>
+      <tr><td align="right" valign="top" class="title">2.</td><td class="title"><a href="https://example.org/b">Show HN: A tiny layout engine</a> <span class="sub">(example.org)</span></td></tr>
+      <tr><td></td><td class="sub">88 points by other 5 hours ago | 31&nbsp;comments</td></tr>
+    </table>
+  </td></tr>
+</table>
+
+<h2>Data table with colspan and border attribute</h2>
+<table class="data">
+  <thead><tr><th>Crate</th><th>Purpose</th><th>Lines</th></tr></thead>
+  <tbody>
+  <tr><td>fontdue</td><td>Glyph rasterization</td><td class="num">5,000</td>
+  <tr><td>minifb</td><td>Window and framebuffer</td><td class="num">12,000</td>
+  <tr><td colspan="2">Total</td><td class="num">17,000</td></tr>
+  </tbody>
+</table>
+<table border="1" cellpadding="6">
+  <caption>Legacy table</caption>
+  <tr><th>A</th><th>B</th></tr>
+  <tr><td>short</td><td>a much longer cell that should wrap when the table runs out of room, because column widths are distributed between their min and max content sizes</td></tr>
+</table>
+
+<div><p class="child">Child selector: green.</p><section><p class="child desc">Descendant only: italic, not green.</p></section></div>
+<p class="imp">!important wins: red.</p>
+<p><a href="https://example.com">https link (green-ish)</a> and <a href="/relative">relative link (blue)</a>.</p>
+<p class="wide-only">Media query: visible at desktop width.</p>
+<p class="narrow-only">Media query: visible on narrow screens.</p>
+
+<div class="card">Card: 300px border-box, centered with auto margins.</div>
+
+<p class="up">uppercase text</p>
+<p class="cap">capitalized words in this line</p>
+<div class="wrap">pre-wrap keeps    spaces
+and newlines, but still wraps long lines when they reach the edge of the container like this one does.</div>
+
+<p>Before<span class="hidden">HIDDEN</span>After (gap where hidden text is). <span class="gone">GONE</span>No gap.</p>
+
+<ol class="roman"><li>One<li>Two<li>Three<ol class="alpha"><li>a<li>b</ol></ol>
+
+<p>Entities: &amp; &lt;tag&gt; &copy; &mdash; &eacute;t&eacute; &#8364; &#x1F600; &unknown; AT&T</p>
+<p>Unclosed <b>bold <i>bold-italic</b> italic?</i> normal.
+<p>Implicit paragraph close.
+<ul><li>Item one<li>Item two<li>Item three</ul>
+
+<a href="#top"><div style="border:1px solid #999;padding:6px">Block inside a link (whole box clickable)</div></a>
+
+<p>Form: <input type="text" placeholder="Search"> <input type="submit" value="Go"> <input type="checkbox" checked> <select><option>One<option selected>Two</select> <button>Click</button></p>
+
+<p>Long URL: https://example.com/a/very/long/path/that/does/not/contain/any/spaces/and/must/be/broken/somewhere/to/fit/in/the/viewport/width/of/the/browser/window</p>
+
+<p><img src="x.png" alt="An image"> image placeholder</p>
+<font color="purple" size="5">font tag</font> <center>centered with center tag</center>
+<script>document.write("SHOULD NOT APPEAR")</script>
+<style>.late { color: orange }</style>
+<p class="late">Late style element applies: orange.</p>
+</body></html>
