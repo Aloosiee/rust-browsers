@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RustBrowser</title>
+<style>
+  body { font-family: sans-serif; background: #f6f5f1; color: #1f1f1f; margin: 0; }
+  .page { max-width: 720px; margin: 0 auto; padding: 32px 24px 48px; }
+  h1 { font-size: 34px; margin: 0 0 4px; color: #a33a12; }
+  .sub { color: #666; margin: 0 0 28px; }
+  h2 { font-size: 19px; margin: 28px 0 8px; border-bottom: 1px solid #d8d4c8; padding-bottom: 4px; }
+  a { color: #1d4ed8; }
+  code { background: #ebe8df; }
+  .note { background: #fff8e0; border-left: 4px solid #e0b040; padding: 10px 14px; margin: 16px 0; }
+  pre { background: #24221f; color: #f1ede4; padding: 12px 14px; }
+  td { padding: 2px 0; }
+  kbd { background: #e6e3da; }
+  .muted { color: #777; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>RustBrowser</h1>
+  <p class="sub">A small browser engine written from scratch in Rust.</p>
+
+  <p>Type a URL or search terms in the bar above and press <kbd>Enter</kbd>.
+  Pages are parsed, styled, laid out and painted by this program, and their scripts run in the Boa JavaScript engine.</p>
+
+  <div class="note">Works best on simple pages. Sites that depend on flexbox, grid,
+  positioning or images will render as a plain stack of blocks.</div>
+
+  <p>JavaScript check: <button id="demo">Clicked 0 times</button> <span id="clock"></span></p>
+
+  <h2>Pages to try</h2>
+  <ul>
+    <li><a href="http://info.cern.ch/hypertext/WWW/TheProject.html">The first web page</a> (CERN, 1991)</li>
+    <li><a href="https://example.com">example.com</a></li>
+    <li><a href="https://text.npr.org">text.npr.org</a>, NPR's text-only news site</li>
+    <li><a href="https://lite.cnn.com">lite.cnn.com</a>, CNN's lite edition</li>
+    <li><a href="https://lite.duckduckgo.com/lite/">DuckDuckGo Lite</a> search</li>
+    <li><a href="https://en.wikipedia.org/wiki/Web_browser_engine">Wikipedia: Browser engine</a></li>
+    <li><a href="#features">Jump to the feature list on this page</a></li>
+  </ul>
+
+  <h2>Keyboard</h2>
+  <table>
+    <tr><td><kbd>Ctrl+L</kbd> or <kbd>F6</kbd></td><td>Focus the address bar</td></tr>
+    <tr><td><kbd>Alt+Left</kbd> or <kbd>Backspace</kbd></td><td>Back</td></tr>
+    <tr><td><kbd>Alt+Right</kbd></td><td>Forward</td></tr>
+    <tr><td><kbd>F5</kbd> or <kbd>Ctrl+R</kbd></td><td>Reload</td></tr>
+    <tr><td><kbd>Space</kbd>, <kbd>PgUp</kbd>, <kbd>PgDn</kbd>, arrows</td><td>Scroll</td></tr>
+    <tr><td><kbd>Ctrl+Plus</kbd> / <kbd>Ctrl+Minus</kbd> / <kbd>Ctrl+0</kbd></td><td>Zoom</td></tr>
+  </table>
+
+  <h2 id="features">What the engine handles</h2>
+  <ol>
+    <li>HTML tokenizing and tree building, with implied end tags for <code>p</code>, <code>li</code>, table cells and others</li>
+    <li>CSS: type, class, ID, attribute, descendant and child selectors; specificity; <code>!important</code>; <code>@media</code> width queries</li>
+    <li>Inheritance and the cascade across the built-in stylesheet, <code>&lt;style&gt;</code>, linked sheets and <code>style=""</code></li>
+    <li>Block layout with margins, padding, borders, <code>max-width</code>, auto-margin centering and margin collapsing between siblings
+      <ul>
+        <li>Inline layout with word wrapping, <code>text-align</code>, <code>line-height</code> and <code>white-space: pre</code></li>
+        <li>Bold, italic and monospace fonts; underline and strike-through</li>
+      </ul>
+    </li>
+    <li>Ordered and unordered lists, links, fragment anchors and history</li>
+    <li>JavaScript with a live DOM: events, timers, <code>fetch</code>, forms, <code>localStorage</code> and <code>history.pushState</code></li>
+  </ol>
+
+  <blockquote>A <em>blockquote</em> with <strong>bold</strong>, <s>struck</s> and <u>underlined</u> text,
+  plus a <a href="about:home">link back to this page</a>.</blockquote>
+
+  <pre>fn main() {
+    let dom = html::parse(source);
+    let styled = style::style_tree(&amp;dom, &amp;sheets);
+    let layout = layout::build_layout_tree(&amp;styled);
+}</pre>
+
+  <p class="muted">Open a local file by typing its path, or run <code>rustbrowser path/to/page.html</code>.</p>
+</div>
+<script>
+  let clicks = 0;
+  const demo = document.getElementById('demo');
+  demo.addEventListener('click', () => { demo.textContent = 'Clicked ' + (++clicks) + (clicks === 1 ? ' time' : ' times'); });
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => { const d = new Date(); document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); };
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
