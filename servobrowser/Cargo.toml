@@ -1,0 +1,31 @@
+[package]
+name = "servobrowser"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+
+[dependencies]
+servo = "0.7.0"
+winit = "0.30.13"
+egui = "0.34.3"
+egui-winit = { version = "0.34.3", default-features = false, features = ["clipboard", "wayland", "x11"] }
+egui_glow = { version = "0.34.3", features = ["winit"] }
+glow = "0.17.0"
+euclid = "0.22"
+dpi = "0.1"
+url = "2.5"
+rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs", "std", "tls12"] }
+log = "0.4"
+http = "1.4"
+png = "0.18"
+
+[profile.release]
+debug = false
+codegen-units = 16
+incremental = true
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
