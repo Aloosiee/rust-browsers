@@ -1,0 +1,64 @@
+html, body, div, p, h1, h2, h3, h4, h5, h6, ul, ol, dl, dt, dd, pre, blockquote,
+address, article, aside, footer, header, hgroup, main, nav, section, figure, figcaption,
+form, fieldset, legend, hr, caption, center, details,
+summary, menu, dir, picture, search, xmp, listing, plaintext, frameset, optgroup {
+  display: block;
+}
+
+head, script, style, title, meta, link, base, template, svg, math, canvas, video, audio,
+iframe, object, embed, noembed, datalist, option, param, source, track, area, map, dialog,
+frame, noframes, rp {
+  display: none;
+}
+
+dialog[open] { display: block; }
+[hidden] { display: none; }
+li { display: list-item; }
+table { display: table; }
+tr { display: table-row; }
+thead, tbody, tfoot { display: table-row-group; }
+td, th { display: table-cell; padding: 1px; vertical-align: middle; }
+
+body { margin: 8px; }
+
+p, dl, multicol, figure { margin: 1em 0; }
+blockquote, figure { margin: 1em 40px; }
+pre, xmp, listing, plaintext { margin: 1em 0; white-space: pre; }
+
+h1 { font-size: 2em; margin: 0.67em 0; }
+h2 { font-size: 1.5em; margin: 0.83em 0; }
+h3 { font-size: 1.17em; margin: 1em 0; }
+h4 { margin: 1.33em 0; }
+h5 { font-size: 0.83em; margin: 1.67em 0; }
+h6 { font-size: 0.67em; margin: 2.33em 0; }
+
+h1, h2, h3, h4, h5, h6, b, strong, th, dt, legend, summary { font-weight: bold; }
+i, em, cite, var, dfn, address { font-style: italic; }
+
+a:link { color: #0000ee; text-decoration: underline; }
+u, ins { text-decoration: underline; }
+s, strike, del { text-decoration: line-through; }
+
+pre, code, kbd, samp, tt, xmp, listing, plaintext { font-family: monospace; font-size: 0.8125em; }
+pre code, pre kbd, pre samp, pre tt { font-size: 1em; }
+
+small, sub, sup { font-size: 0.83em; }
+big { font-size: 1.17em; }
+mark { background-color: yellow; color: black; }
+
+ul, ol, menu, dir { padding-left: 40px; margin: 1em 0; }
+ul ul, ul ol, ol ul, ol ol, ul menu, menu ul { margin: 0; }
+ol { list-style-type: decimal; }
+ul, menu, dir { list-style-type: disc; }
+ul ul, ol ul, menu ul { list-style-type: circle; }
+ul ul ul, ol ul ul, ul ol ul { list-style-type: square; }
+dd { margin-left: 40px; }
+
+hr { border: 1px inset #9a9a9a; margin: 0.5em 0; }
+center { text-align: center; }
+caption { text-align: center; }
+th { text-align: center; }
+
+fieldset { margin: 0 2px; padding: 0.35em 0.75em 0.625em; border: 2px groove #c0c0c0; }
+legend { padding: 0 2px; }
+button { background-color: #e2e2e6; }
