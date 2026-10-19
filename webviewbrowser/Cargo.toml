@@ -1,0 +1,25 @@
+[package]
+name = "webviewbrowser"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "A tabbed desktop web browser on the operating system's web engine"
+license = "MIT"
+
+[dependencies]
+wry = { version = "0.57", features = ["devtools"] }
+tao = "0.37"
+muda = "0.17"
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "6"
+url = "2.5"
+percent-encoding = "2.3"
+open = "5"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+[profile.release]
+codegen-units = 16
