@@ -16,6 +16,22 @@
           "column": 3
         }
       ]
+    },
+    {
+      "owner": "rust-test",
+      "pattern": [
+        {
+          "regexp": "^thread '(.*)' panicked at (\\S+):(\\d+):(\\d+):$",
+          "code": 1,
+          "file": 2,
+          "line": 3,
+          "column": 4
+        },
+        {
+          "regexp": "^(.*)$",
+          "message": 1
+        }
+      ]
     }
   ]
 }

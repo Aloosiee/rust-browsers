@@ -85,7 +85,17 @@ fn local_path(text: &str) -> Option<String> {
         None => Path::new(text).to_path_buf(),
     };
     let path = expanded.canonicalize().ok()?;
-    Url::from_file_path(path).ok().map(|u| u.to_string())
+    Url::from_file_path(strip_verbatim(&path)).ok().map(|u| u.to_string())
+}
+
+/// On Windows `canonicalize` returns verbatim paths like `\\?\C:\dir`, which `file:` URLs
+/// can't express. Turns them back into ordinary drive paths.
+fn strip_verbatim(path: &Path) -> std::path::PathBuf {
+    let text = path.to_string_lossy();
+    match text.strip_prefix(r"\\?\") {
+        Some(rest) if rest.as_bytes().get(1) == Some(&b':') => rest.into(),
+        _ => path.to_path_buf(),
+    }
 }
 
 #[cfg(test)]
@@ -127,8 +137,14 @@ mod tests {
 
     #[test]
     fn opens_local_files() {
-        let dir = std::env::temp_dir().canonicalize().unwrap();
+        let dir = strip_verbatim(&std::env::temp_dir().canonicalize().unwrap());
         let url = go(dir.to_str().unwrap());
         assert!(url.starts_with("file://"), "{url}");
+    }
+
+    #[test]
+    fn strips_verbatim_prefixes() {
+        assert_eq!(strip_verbatim(Path::new(r"\\?\C:\Users")), Path::new(r"C:\Users"));
+        assert_eq!(strip_verbatim(Path::new("/tmp")), Path::new("/tmp"));
     }
 }
