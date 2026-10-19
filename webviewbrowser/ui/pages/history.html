@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>History</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="pages.css">
+</head>
+<body>
+<main>
+  <h1>History</h1>
+  <div class="toolbar">
+    <input id="filter" class="grow" type="search" placeholder="Search history" aria-label="Search history">
+    <select id="range" aria-label="Time range to clear">
+      <option value="hour">Last hour</option>
+      <option value="day">Last 24 hours</option>
+      <option value="week">Last 7 days</option>
+      <option value="all">Everything</option>
+    </select>
+    <button id="clear" class="danger">Clear history</button>
+  </div>
+  <div id="list"></div>
+  <p class="empty" id="empty" hidden>No history found.</p>
+  <p style="text-align:center"><button id="more" hidden>Show more</button></p>
+</main>
+<script src="pages.js"></script>
+<script>
+  const PAGE = 100;
+  const list = document.getElementById('list');
+  let oldest = null;
+  let lastDay = '';
+  let card = null;
+
+  function addVisits(visits) {
+    for (const v of visits) {
+      const day = formatDay(v.at);
+      if (day !== lastDay) {
+        lastDay = day;
+        list.append(el('div', { class: 'day' }, day));
+        card = el('div', { class: 'card' });
+        list.append(card);
+      }
+      const row = el('div', { class: 'row' },
+        el('span', { class: 'time' }, formatTime(v.at)),
+        favicon(v.url),
+        el('div', { class: 'main' },
+          el('div', { class: 'title', title: v.url,
+            onclick: (e) => openUrl(v.url, e),
+            onauxclick: (e) => { if (e.button === 1) openUrl(v.url, e); } }, v.title || v.url),
+          el('div', { class: 'sub' }, v.url)),
+        el('button', { class: 'icon', title: 'Remove from history', 'aria-label': 'Remove from history',
+          onclick: async () => { await browser.call('history.delete', { id: v.id }); row.remove(); } }, '✕'));
+      card.append(row);
+      oldest = v.at;
+    }
+  }
+
+  async function load(reset) {
+    if (reset) {
+      list.textContent = '';
+      oldest = null;
+      lastDay = '';
+    }
+    const visits = await browser.call('history.query', {
+      text: document.getElementById('filter').value, before: oldest, limit: PAGE });
+    addVisits(visits);
+    document.getElementById('empty').hidden = list.childElementCount > 0;
+    document.getElementById('more').hidden = visits.length < PAGE;
+  }
+
+  let timer = 0;
+  document.getElementById('filter').addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => load(true), 150);
+  });
+  document.getElementById('more').addEventListener('click', () => load(false));
+  document.getElementById('clear').addEventListener('click', async () => {
+    const range = document.getElementById('range');
+    const label = range.options[range.selectedIndex].text.toLowerCase();
+    if (!confirm(`Clear history from ${label}?`)) return;
+    await browser.call('history.clear', { range: range.value });
+    toast('History cleared');
+    load(true);
+  });
+  browser.onChange('history', () => load(true));
+  load(true);
+</script>
+</body>
+</html>

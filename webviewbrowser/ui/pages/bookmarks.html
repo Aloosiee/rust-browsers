@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bookmarks</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="pages.css">
+<style>
+  .edit { display: grid; grid-template-columns: 1fr 1.4fr auto auto; gap: 8px; width: 100%; align-items: center; }
+  .order { display: flex; flex-direction: column; }
+  .order button { padding: 0 6px; line-height: 1; }
+  label.check { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bookmarks</h1>
+  <div class="toolbar">
+    <input id="filter" class="grow" type="search" placeholder="Search bookmarks" aria-label="Search bookmarks">
+    <button id="add" class="primary">Add bookmark</button>
+    <button id="export">Export</button>
+  </div>
+  <div class="card" id="list"></div>
+  <p class="empty" id="empty" hidden>No bookmarks yet. Press Ctrl+D or click the star in the address bar to bookmark a page.</p>
+</main>
+<script src="pages.js"></script>
+<script>
+  let bookmarks = [];
+
+  function render() {
+    const filter = document.getElementById('filter').value.toLowerCase();
+    const list = document.getElementById('list');
+    list.textContent = '';
+    const shown = bookmarks.filter((b) => !filter || b.title.toLowerCase().includes(filter) || b.url.toLowerCase().includes(filter));
+    shown.forEach((b) => {
+      const index = bookmarks.indexOf(b);
+      list.append(el('div', { class: 'row' },
+        el('div', { class: 'order' },
+          el('button', { class: 'icon', title: 'Move up', 'aria-label': 'Move up', disabled: index === 0 || !!filter,
+            onclick: () => move(b, index - 1) }, '▲'),
+          el('button', { class: 'icon', title: 'Move down', 'aria-label': 'Move down', disabled: index === bookmarks.length - 1 || !!filter,
+            onclick: () => move(b, index + 1) }, '▼')),
+        favicon(b.url),
+        el('div', { class: 'main' },
+          el('div', { class: 'title', title: b.url,
+            onclick: (e) => openUrl(b.url, e),
+            onauxclick: (e) => { if (e.button === 1) openUrl(b.url, e); } }, b.title || b.url),
+          el('div', { class: 'sub' }, b.url)),
+        el('label', { class: 'check', title: 'Show on the bookmarks toolbar' },
+          el('input', { type: 'checkbox', checked: b.toolbar, onchange: (e) => save(b, { toolbar: e.target.checked }) }),
+          'Toolbar'),
+        el('button', { class: 'icon', title: 'Edit', 'aria-label': 'Edit', onclick: () => edit(b) }, '✎'),
+        el('button', { class: 'icon', title: 'Delete', 'aria-label': 'Delete', onclick: () => remove(b) }, '✕')));
+    });
+    document.getElementById('empty').hidden = bookmarks.length > 0;
+    list.hidden = shown.length === 0;
+  }
+
+  async function load() {
+    bookmarks = await browser.call('bookmarks.list');
+    render();
+  }
+
+  async function save(b, changes) {
+    const next = { ...b, ...changes };
+    await browser.call('bookmarks.update', { id: b.id, url: next.url, title: next.title, toolbar: next.toolbar });
+    load();
+  }
+
+  async function move(b, index) {
+    await browser.call('bookmarks.move', { id: b.id, index });
+    load();
+  }
+
+  async function remove(b) {
+    await browser.call('bookmarks.delete', { id: b.id });
+    toast('Bookmark deleted');
+    load();
+  }
+
+  function edit(b) {
+    const title = prompt('Name', b.title);
+    if (title === null) return;
+    const url = prompt('URL', b.url);
+    if (url === null || !url.trim()) return;
+    save(b, { title, url: url.trim() });
+  }
+
+  document.getElementById('add').addEventListener('click', async () => {
+    const url = prompt('URL of the page to bookmark', 'https://');
+    if (!url || !url.trim() || url.trim() === 'https://') return;
+    const title = prompt('Name', '') || '';
+    await browser.call('bookmarks.add', { url: url.trim(), title, toolbar: true });
+    load();
+  });
+
+  document.getElementById('export').addEventListener('click', () => {
+    const items = bookmarks.map((b) => `<DT><A HREF="${b.url.replace(/"/g, '&quot;')}">${b.title.replace(/</g, '&lt;')}</A>`).join('\n');
+    const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n${items}\n</DL><p>\n`;
+    const link = el('a', { href: URL.createObjectURL(new Blob([html], { type: 'text/html' })), download: 'bookmarks.html' });
+    link.click();
+  });
+
+  document.getElementById('filter').addEventListener('input', render);
+  browser.onChange('bookmarks', load);
+  load();
+</script>
+</body>
+</html>
