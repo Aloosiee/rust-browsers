@@ -12,6 +12,7 @@ mod event;
 mod ipc;
 mod menu;
 mod paths;
+#[cfg(target_os = "linux")]
 mod permissions;
 mod protocol;
 mod session;

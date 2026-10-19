@@ -26,7 +26,6 @@ pub fn origin_label(url: &str) -> String {
 }
 
 /// Shows a blocking Allow/Block dialog and returns the answer.
-#[cfg(target_os = "linux")]
 pub fn ask(kind: PermissionKind, page_url: &str) -> PermissionResponse {
     use gtk::prelude::*;
     let Some(what) = describe(&kind) else {
