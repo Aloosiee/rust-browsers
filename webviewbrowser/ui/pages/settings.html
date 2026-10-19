@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="pages.css">
+</head>
+<body>
+<main>
+  <h1>Settings</h1>
+
+  <h2>Startup</h2>
+  <div class="card">
+    <div class="setting">
+      <div class="label">Open previous windows and tabs<div class="help">Restore your last session when the browser starts.</div></div>
+      <label class="switch"><input type="checkbox" data-key="restoreSession"><span></span></label>
+    </div>
+    <div class="setting">
+      <div class="label">Home page<div class="help">Opened by the Home button and in new windows.</div></div>
+      <input type="text" data-key="homepage" spellcheck="false">
+      <button id="current-page" class="link">Use new tab page</button>
+    </div>
+  </div>
+
+  <h2>Search</h2>
+  <div class="card">
+    <div class="setting">
+      <div class="label">Search engine<div class="help">Used for searches typed in the address bar.</div></div>
+      <select data-key="searchEngine" id="engine"></select>
+    </div>
+    <div class="setting" id="custom-row">
+      <div class="label">Custom search URL<div class="help">Use %s where the search terms go.</div></div>
+      <input type="url" data-key="customSearchUrl" placeholder="https://example.com/search?q=%s" spellcheck="false">
+    </div>
+    <div class="setting">
+      <div class="label">Suggest pages from history</div>
+      <label class="switch"><input type="checkbox" data-key="suggestHistory"><span></span></label>
+    </div>
+    <div class="setting">
+      <div class="label">Suggest bookmarks</div>
+      <label class="switch"><input type="checkbox" data-key="suggestBookmarks"><span></span></label>
+    </div>
+  </div>
+
+  <h2>Appearance</h2>
+  <div class="card">
+    <div class="setting">
+      <div class="label">Show bookmarks toolbar<div class="help">Ctrl+Shift+B</div></div>
+      <label class="switch"><input type="checkbox" data-key="showBookmarksBar"><span></span></label>
+    </div>
+    <div class="setting">
+      <div class="label">Default zoom<div class="help">Zoom you set on a specific site is remembered for that site.</div></div>
+      <select data-key="defaultZoom" data-number="1" id="zoom"></select>
+    </div>
+  </div>
+
+  <h2>Downloads</h2>
+  <div class="card">
+    <div class="setting">
+      <div class="label">Save files to<div class="help">Leave empty to use your Downloads folder.</div></div>
+      <input type="text" data-key="downloadDir" spellcheck="false" id="download-dir">
+    </div>
+  </div>
+
+  <h2>Privacy</h2>
+  <div class="card">
+    <div class="setting">
+      <div class="label">Cookies and site data<div class="help">Signs you out of websites and clears what they stored, including cache.</div></div>
+      <button class="danger" data-clear="siteData">Clear data</button>
+    </div>
+    <div class="setting">
+      <div class="label">History<div class="help">Every page you have visited, including address bar suggestions.</div></div>
+      <button class="danger" data-clear="history">Clear history</button>
+    </div>
+    <div class="setting">
+      <div class="label">Site zoom levels</div>
+      <button data-clear="zoom">Reset</button>
+    </div>
+  </div>
+
+  <h2>About</h2>
+  <div class="card">
+    <div class="setting"><div class="label">Web engine</div><span id="engine-version"></span></div>
+    <div class="setting"><div class="label">Profile folder</div><span id="profile" style="user-select:all"></span></div>
+  </div>
+</main>
+<script src="pages.js"></script>
+<script>
+  const ZOOMS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.2, 1.33, 1.5, 1.7, 2];
+  let settings = {};
+
+  async function load() {
+    const data = await browser.call('settings.get');
+    settings = data.settings;
+    const engine = document.getElementById('engine');
+    engine.textContent = '';
+    for (const [id, name] of data.engines) engine.append(el('option', { value: id }, name));
+    engine.append(el('option', { value: 'custom' }, 'Custom…'));
+    const zoom = document.getElementById('zoom');
+    zoom.textContent = '';
+    for (const z of ZOOMS) zoom.append(el('option', { value: z }, Math.round(z * 100) + '%'));
+    document.getElementById('download-dir').placeholder = data.defaultDownloadDir;
+    document.getElementById('engine-version').textContent = data.engine;
+    document.getElementById('profile').textContent = data.profile;
+    for (const input of document.querySelectorAll('[data-key]')) {
+      const value = settings[input.dataset.key];
+      if (input.type === 'checkbox') input.checked = !!value;
+      else input.value = value;
+    }
+    if (!ZOOMS.includes(settings.defaultZoom)) {
+      zoom.append(el('option', { value: settings.defaultZoom }, Math.round(settings.defaultZoom * 100) + '%'));
+      zoom.value = settings.defaultZoom;
+    }
+    document.getElementById('custom-row').hidden = settings.searchEngine !== 'custom';
+  }
+
+  async function save(input) {
+    const key = input.dataset.key;
+    let value = input.type === 'checkbox' ? input.checked : input.value;
+    if (input.dataset.number) value = Number(value);
+    settings[key] = value;
+    document.getElementById('custom-row').hidden = settings.searchEngine !== 'custom';
+    if (key === 'searchEngine' && value === 'custom' && !settings.customSearchUrl) return;
+    settings = await browser.call('settings.set', { settings });
+    toast('Saved');
+  }
+
+  for (const input of document.querySelectorAll('[data-key]')) {
+    input.addEventListener('change', () => save(input));
+  }
+
+  document.getElementById('current-page').addEventListener('click', () => {
+    const input = document.querySelector('[data-key=homepage]');
+    input.value = 'browser://newtab';
+    save(input);
+  });
+
+  const confirmText = {
+    siteData: 'Clear all cookies, cached files and site data? You will be signed out of websites.',
+    history: 'Clear all browsing history?',
+    zoom: 'Reset zoom for all sites?',
+  };
+  for (const button of document.querySelectorAll('[data-clear]')) {
+    button.addEventListener('click', async () => {
+      if (!confirm(confirmText[button.dataset.clear])) return;
+      await browser.call('data.clear', { what: button.dataset.clear });
+      toast('Cleared');
+    });
+  }
+
+  load();
+</script>
+</body>
+</html>

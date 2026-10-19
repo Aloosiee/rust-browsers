@@ -41,3 +41,46 @@ jobs:
         with:
           components: rustfmt
       - run: cargo fmt --check
+
+  webviewbrowser-linux:
+    name: webviewbrowser on Linux (fmt, clippy, build, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webviewbrowser
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: webviewbrowser
+      - name: Install WebKitGTK and GTK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev libxdo-dev
+      - name: Show compiler errors as annotations
+        run: echo "::add-matcher::${{ github.workspace }}/.github/rust-matcher.json"
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked
+
+  webviewbrowser-windows:
+    name: webviewbrowser on Windows (build, test)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: webviewbrowser
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: webviewbrowser
+      - name: Show compiler errors as annotations
+        run: echo "::add-matcher::${{ github.workspace }}/.github/rust-matcher.json"
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked

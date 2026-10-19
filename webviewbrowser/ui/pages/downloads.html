@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Downloads</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="pages.css">
+<style>
+  .state.downloading { color: var(--accent); }
+  .state.failed, .state.missing { color: var(--danger); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Downloads</h1>
+  <div class="toolbar">
+    <span class="grow" id="folder"></span>
+    <button id="open-folder">Open downloads folder</button>
+    <button id="clear">Clear list</button>
+  </div>
+  <div class="card" id="list"></div>
+  <p class="empty" id="empty" hidden>Files you download will appear here.</p>
+</main>
+<script src="pages.js"></script>
+<script>
+  function size(bytes) {
+    if (bytes == null) return '';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let n = bytes;
+    let i = 0;
+    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+    return `${n.toFixed(i ? 1 : 0)} ${units[i]}`;
+  }
+
+  async function load() {
+    const { downloads, folder } = await browser.call('downloads.list');
+    document.getElementById('folder').textContent = folder ? `Saving to ${folder}` : '';
+    const list = document.getElementById('list');
+    list.textContent = '';
+    for (const d of downloads) {
+      const name = d.path.split(/[\\/]/).pop() || d.url;
+      const state = d.missing ? 'missing' : d.state;
+      const label = { downloading: 'Downloading…', completed: size(d.size), failed: 'Failed', missing: 'File moved or deleted' }[state];
+      const done = state === 'completed';
+      list.append(el('div', { class: 'row' },
+        favicon(d.url),
+        el('div', { class: 'main' },
+          el('div', { class: 'title', title: d.path, onclick: () => done && browser.call('downloads.open', { id: d.id }) }, name),
+          el('div', { class: 'sub' }, el('span', { class: 'state ' + state }, label), ' — ', d.url)),
+        done ? el('button', { onclick: () => browser.call('downloads.open', { id: d.id }) }, 'Open') : null,
+        done ? el('button', { onclick: () => browser.call('downloads.showInFolder', { id: d.id }) }, 'Show in folder') : null,
+        state === 'failed' ? el('button', { onclick: () => openUrl(d.url) }, 'Retry') : null,
+        el('button', { class: 'icon', title: 'Remove from list', 'aria-label': 'Remove from list',
+          onclick: async () => { await browser.call('downloads.remove', { id: d.id }); load(); } }, '✕')));
+    }
+    document.getElementById('empty').hidden = downloads.length > 0;
+    list.hidden = downloads.length === 0;
+  }
+
+  document.getElementById('clear').addEventListener('click', async () => { await browser.call('downloads.clear'); load(); });
+  document.getElementById('open-folder').addEventListener('click', () => browser.call('downloads.openFolder'));
+  browser.onChange('downloads', load);
+  load();
+</script>
+</body>
+</html>
